@@ -1,0 +1,11 @@
+1. To access the app with port-forward:
+
+   kubectl port-forward svc/{{ include "react-app.fullname" . }} 8080:80 -n {{ .Release.Namespace }}
+
+2. Then open:
+
+   http://localhost:8080
+
+3. To inspect the release:
+
+   helm status {{ .Release.Name }} -n {{ .Release.Namespace }}

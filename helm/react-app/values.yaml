@@ -1,0 +1,70 @@
+replicaCount: 2
+
+image:
+  repository: react-hello-local
+  tag: v1
+  pullPolicy: Never # Use 'Never' for local images, change to 'IfNotPresent' or 'Always' for remote images
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+  nodePort: 30007
+
+resources:
+  requests:
+    memory: 128Mi
+    cpu: 100m
+  limits:
+    memory: 512Mi
+    cpu: 500m
+
+securityContext:
+  runAsUser: 0
+  allowPrivilegeEscalation: true
+  readOnlyRootFilesystem: false
+
+podSecurityContext: {}
+
+nginx:
+  extraVolumeMounts:
+    - name: tmp
+      mountPath: /tmp
+    - name: nginx-cache
+      mountPath: /var/cache/nginx
+    - name: nginx-run
+      mountPath: /var/run
+
+extraVolumes:
+  - name: tmp
+    emptyDir: {}
+  - name: nginx-cache
+    emptyDir: {}
+  - name: nginx-run
+    emptyDir: {}
+
+probes:
+  liveness:
+    initialDelaySeconds: 20
+    periodSeconds: 10
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+
+env:
+  APP_NAME: react-hello
+  LOG_LEVEL: info
+  APP_ENV: development
+
+ingress:
+  enabled: true
+  className: nginx
+  host: react.local

@@ -1,0 +1,23 @@
+env:
+  APP_ENV: staging
+
+ingress:
+  enabled: true
+  host: staging.react.local
+
+replicaCount: 2
+
+image:
+  tag: staging
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

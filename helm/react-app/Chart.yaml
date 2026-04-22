@@ -1,0 +1,6 @@
+apiVersion: v2
+name: react-hello-local
+description: Helm chart for the React app served by nginx
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

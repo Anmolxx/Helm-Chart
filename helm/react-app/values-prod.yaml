@@ -1,0 +1,29 @@
+env:
+  APP_ENV: production
+  LOG_LEVEL: warn
+
+ingress:
+  enabled: true
+  host: react.local
+
+replicaCount: 4
+
+image:
+  tag: prod
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+securityContext:
+  runAsUser: 1001
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true

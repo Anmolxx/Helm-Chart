@@ -3,14 +3,16 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 ENV NODE_OPTIONS=--openssl-legacy-provider
-# Copy package.json and package-lock.json
-COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Copy the app manifest and repo lockfile from the build context root
+COPY app/package.json ./package.json
+COPY package-lock.json ./package-lock.json
+
+# Install dependencies from the lockfile
+RUN npm ci --no-audit --no-fund
 
 # Copy application code
-COPY . .
+COPY app/. .
 
 # Build the React application
 RUN npm run build
