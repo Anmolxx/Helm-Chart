@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME = "react-hello-local"
-        IMAGE_NAME = "react-hello-local"
-        TAG = "${BUILD_NUMBER}"
+        APP_NAME     = "react-hello-local"
+        IMAGE_NAME   = "react-hello-local"
+        TAG          = "${BUILD_NUMBER}"
         RELEASE_NAME = ""
-        NAMESPACE = ""
-        VALUES_FILE = ""
+        NAMESPACE    = ""
+        VALUES_FILE  = ""
     }
 
     stages {
@@ -17,20 +17,20 @@ pipeline {
                 script {
                     if (env.BRANCH_NAME == "dev") {
                         env.RELEASE_NAME = "react-dev"
-                        env.NAMESPACE = "dev"
-                        env.VALUES_FILE = "helm/react-app/values-dev.yaml"
-                    } 
-                    else if (env.BRANCH_NAME == "staging") {
+                        env.NAMESPACE    = "dev"
+                        env.VALUES_FILE  = "helm/react-app/values-dev.yaml"
+
+                    } else if (env.BRANCH_NAME == "staging") {
                         env.RELEASE_NAME = "react-stage"
-                        env.NAMESPACE = "staging"
-                        env.VALUES_FILE = "helm/react-app/values-staging.yaml"
-                    } 
-                    else if (env.BRANCH_NAME == "prod") {
+                        env.NAMESPACE    = "staging"
+                        env.VALUES_FILE  = "helm/react-app/values-staging.yaml"
+
+                    } else if (env.BRANCH_NAME == "prod") {
                         env.RELEASE_NAME = "react-prod"
-                        env.NAMESPACE = "prod"
-                        env.VALUES_FILE = "helm/react-app/values-prod.yaml"
-                    } 
-                    else {
+                        env.NAMESPACE    = "prod"
+                        env.VALUES_FILE  = "helm/react-app/values-prod.yaml"
+
+                    } else {
                         error("Unsupported branch: ${env.BRANCH_NAME}")
                     }
                 }
