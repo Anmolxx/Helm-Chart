@@ -57,6 +57,14 @@ pipeline {
             }
         }
 
+        stage('Load Image into Minikube') {
+            steps {
+                sh """
+                minikube image load ${env.IMAGE_NAME}:${env.TAG}
+                """
+            }
+        }
+
         stage('Deploy with Helm') {
             steps {
                 sh """
@@ -75,6 +83,7 @@ pipeline {
                 sh """
                 kubectl get pods -n ${env.NAMESPACE}
                 kubectl get svc -n ${env.NAMESPACE}
+                kubectl get ingress -n ${env.NAMESPACE} || true
                 helm list -n ${env.NAMESPACE}
                 """
             }
