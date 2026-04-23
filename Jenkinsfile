@@ -46,7 +46,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh """
-                docker build -t ${IMAGE_NAME}:${TAG} ./app
+                docker build --no-cache -t react-hello-local:${BUILD_NUMBER} ./app
                 """
             }
         }
