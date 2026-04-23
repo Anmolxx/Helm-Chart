@@ -5,6 +5,7 @@ pipeline {
         APP_NAME     = "react-hello-local"
         IMAGE_NAME   = "react-hello-local"
         TAG          = "${BUILD_NUMBER}"
+
         RELEASE_NAME = ""
         NAMESPACE    = ""
         VALUES_FILE  = ""
@@ -33,6 +34,11 @@ pipeline {
                     } else {
                         error("Unsupported branch: ${env.BRANCH_NAME}")
                     }
+
+                    echo "Branch: ${env.BRANCH_NAME}"
+                    echo "Release: ${env.RELEASE_NAME}"
+                    echo "Namespace: ${env.NAMESPACE}"
+                    echo "Values File: ${env.VALUES_FILE}"
                 }
             }
         }
@@ -46,7 +52,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh """
-                docker build --no-cache -t react-hello-local:${BUILD_NUMBER} ./app
+                docker build --no-cache -t ${env.IMAGE_NAME}:${env.TAG} ./app
                 """
             }
         }
@@ -54,12 +60,12 @@ pipeline {
         stage('Deploy with Helm') {
             steps {
                 sh """
-                helm upgrade --install ${RELEASE_NAME} ./helm/react-app \
-                  --namespace ${NAMESPACE} \
+                helm upgrade --install ${env.RELEASE_NAME} ./helm/react-app \
+                  --namespace ${env.NAMESPACE} \
                   --create-namespace \
-                  -f ${VALUES_FILE} \
-                  --set image.repository=${IMAGE_NAME} \
-                  --set image.tag=${TAG}
+                  -f ${env.VALUES_FILE} \
+                  --set image.repository=${env.IMAGE_NAME} \
+                  --set image.tag=${env.TAG}
                 """
             }
         }
@@ -67,8 +73,9 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh """
-                kubectl get pods -n ${NAMESPACE}
-                kubectl get svc -n ${NAMESPACE}
+                kubectl get pods -n ${env.NAMESPACE}
+                kubectl get svc -n ${env.NAMESPACE}
+                helm list -n ${env.NAMESPACE}
                 """
             }
         }
@@ -81,6 +88,10 @@ pipeline {
 
         failure {
             echo "Pipeline failed"
+        }
+
+        always {
+            echo "Build completed: ${env.BUILD_NUMBER}"
         }
     }
 }
