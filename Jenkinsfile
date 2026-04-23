@@ -2,123 +2,85 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME = "react-app"
-        DOCKER_IMAGE = "docker.io/anmoldeepkaur1103/react-app"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        APP_NAME = "react-hello-local"
+        IMAGE_NAME = "react-hello-local"
+        TAG = "${BUILD_NUMBER}"
+        RELEASE_NAME = ""
+        NAMESPACE = ""
+        VALUES_FILE = ""
     }
 
     stages {
 
+        stage('Detect Branch') {
+            steps {
+                script {
+                    if (env.BRANCH_NAME == "dev") {
+                        env.RELEASE_NAME = "react-dev"
+                        env.NAMESPACE = "dev"
+                        env.VALUES_FILE = "helm/react-app/values-dev.yaml"
+                    } 
+                    else if (env.BRANCH_NAME == "staging") {
+                        env.RELEASE_NAME = "react-stage"
+                        env.NAMESPACE = "staging"
+                        env.VALUES_FILE = "helm/react-app/values-staging.yaml"
+                    } 
+                    else if (env.BRANCH_NAME == "prod") {
+                        env.RELEASE_NAME = "react-prod"
+                        env.NAMESPACE = "prod"
+                        env.VALUES_FILE = "helm/react-app/values-prod.yaml"
+                    } 
+                    else {
+                        error("Unsupported branch: ${env.BRANCH_NAME}")
+                    }
+                }
+            }
+        }
+
         stage('Checkout') {
             steps {
-                echo "📥 Checking out code..."
-                git branch: 'main', url: 'https://github.com/Anmolxx/react-hello-world.git'
+                checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "🔨 Building Docker image..."
-                sh '''
-                docker build -t docker.io/anmoldeepkaur1103/react-app:${BUILD_NUMBER} ./app
-                '''
+                sh """
+                docker build -t ${IMAGE_NAME}:${TAG} ./app
+                """
             }
         }
 
-        stage('Docker Login & Push') {
+        stage('Deploy with Helm') {
             steps {
-                echo "🚀 Logging in & pushing to Docker Hub..."
-
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    docker push $DOCKER_IMAGE:$IMAGE_TAG
-                    '''
-                }
-            }
-        }
-
-        stage('Update Kubernetes Manifest') {
-            steps {
-                echo "📝 Updating deployment image..."
-
-                sh '''
-                sed -i "s|image: .*|image: $DOCKER_IMAGE:$IMAGE_TAG|g" k8s/deployment.yaml
-                '''
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                echo "☸️ Deploying to Kubernetes..."
-
-                sh '''
-                kubectl apply -f k8s/namespace.yaml || true
-                kubectl apply -f k8s/deployment.yaml
-                kubectl apply -f k8s/service.yaml
-                kubectl apply -f k8s/fluent-bit.yaml
-
-                kubectl rollout status deployment react-app-deployment -n react-app
-                '''
+                sh """
+                helm upgrade --install ${RELEASE_NAME} ./helm/react-app \
+                  --namespace ${NAMESPACE} \
+                  --create-namespace \
+                  -f ${VALUES_FILE} \
+                  --set image.repository=${IMAGE_NAME} \
+                  --set image.tag=${TAG}
+                """
             }
         }
 
         stage('Verify Deployment') {
             steps {
-                echo "🔍 Verifying deployment..."
-
-                sh '''
-                kubectl get pods -n react-app -o wide
-                kubectl get svc -n react-app
-                '''
-            }
-        }
-
-        // stage('Smoke Test') {
-        //     steps {
-        //         echo "🌐 Testing application..."
-
-        //         sh '''
-        //         sleep 10
-        //         curl -f http://3.208.213.108:3001 || exit 1
-        //         '''
-        //     }
-        // }
-
-        stage('Summary') {
-            steps {
-                sh '''
-                echo ""
-                echo "=========================================="
-                echo "✅ CI/CD PIPELINE EXECUTED SUCCESSFULLY"
-                echo "=========================================="
-                '''
+                sh """
+                kubectl get pods -n ${NAMESPACE}
+                kubectl get svc -n ${NAMESPACE}
+                """
             }
         }
     }
 
     post {
-        failure {
-            echo "❌ Pipeline failed - Debugging info:"
-
-            sh '''
-            echo "---- Pods ----"
-            kubectl get pods -A || true
-
-            echo "---- Describe ----"
-            kubectl describe pods -n react-app || true
-
-            echo "---- Docker ----"
-            docker ps -a
-            '''
+        success {
+            echo "Deployment successful for ${env.BRANCH_NAME}"
         }
 
-        success {
-            echo "✅ Pipeline succeeded"
+        failure {
+            echo "Pipeline failed"
         }
     }
 }
