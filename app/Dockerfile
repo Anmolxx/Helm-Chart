@@ -5,7 +5,7 @@ WORKDIR /app
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
 # Copy the app manifest and repo lockfile from the build context root
-COPY app/package.json ./package.json
+COPY package.json ./package.json
 COPY package-lock.json ./package-lock.json
 
 # Install dependencies from the lockfile
