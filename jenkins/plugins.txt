@@ -1,26 +1,11 @@
-# Core CI/CD
 workflow-aggregator
-pipeline-stage-view
-
-# Git & GitHub
 git
 github
 github-branch-source
-
-# Credentials
-credentials
 credentials-binding
-
-# Docker
 docker-workflow
-docker-plugin
-
-# Kubernetes
-kubernetes
-
-# UI (optional but good)
+pipeline-stage-view
 blueocean
-
-# Utility
-timestamper
-ansiColor 
+job-dsl
+kubernetes-cli
+ws-cleanup
